@@ -124,6 +124,12 @@ public class OrderItemsController {
 
     @GetMapping("/{orderId}/items")
     public ResponseEntity<Object> list(@PathVariable(value = "orderId") UUID orderId) {
+        Optional<Order> order = orderService.findById(orderId);
+
+        if (!order.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
+        }
+
         List<OrderItems> orderItems = orderItemsService.findAllByOrderId(orderId);
 
         if (orderItems.isEmpty()) {
