@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.seniorsystems.logisticsapi.dtos.ItemDto;
 import com.seniorsystems.logisticsapi.models.Item;
+import com.seniorsystems.logisticsapi.models.OrderItems;
 import com.seniorsystems.logisticsapi.services.ItemService;
+import com.seniorsystems.logisticsapi.services.OrderItemsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -28,6 +30,8 @@ public class ItemController {
 
     @Autowired
     private ItemService itemService;
+    @Autowired
+    private OrderItemsService orderItemsService;
 
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody @Valid ItemDto itemDto) {
@@ -76,6 +80,15 @@ public class ItemController {
         Item item = new Item();
         BeanUtils.copyProperties(itemDto, item);
         item.setId(itemOptional.get().getId());
+        item.setOrderItems(itemOptional.get().getOrderItems());
+
+        if (!item.getOrderItems().isEmpty()) {
+            for (OrderItems orderItem : item.getOrderItems()) {
+                Double totalValue = item.getValue() * orderItem.getQuantity();
+                orderItem.setTotalValue(totalValue);
+                orderItemsService.save(orderItem);
+            }
+        }
 
         return ResponseEntity.status(HttpStatus.OK).body(itemService.save(item));
     }
